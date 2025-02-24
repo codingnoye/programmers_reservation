@@ -11,10 +11,13 @@ from app.db.session import get_session
 from app.model.models import Reservation, User, UserRole
 
 load_dotenv()
+
+router = APIRouter()
+
+# jwt 관련 설정
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
 
-router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/user/token")
 
 # 현재 유저를 가져오는 의존성
@@ -76,7 +79,7 @@ def check_schedule(start_time: datetime, end_time: datetime, db: Session) -> lis
         result.append((start_time, end_time, 0))
     return result
 
-# 예약 일정 요청 모델
+# 예약 일정
 class ReservationScheduleRequest(BaseModel):
     start_time: datetime
     end_time: datetime
@@ -218,6 +221,7 @@ def delete_reservation(
     db.commit()
     return {"message": "예약이 삭제되었습니다."}
 
+# 내 예약 조회
 @router.get("/my")
 async def get_my_reservations(
     current_user: User = Depends(get_current_user),
@@ -229,6 +233,7 @@ async def get_my_reservations(
     reservations = db.query(Reservation).filter(Reservation.user_id == current_user.id).all()
     return reservations
 
+# 전체 예약 조회
 @router.get("/all")
 async def get_all_reservations(
     current_user: User = Depends(get_current_user),
